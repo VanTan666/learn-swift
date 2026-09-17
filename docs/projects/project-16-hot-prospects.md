@@ -28,6 +28,11 @@ final class Prospects {
         Prospect(name: "Анна"),
         Prospect(name: "Борис", isContacted: true)
     ]
+
+    func toggleContacted(for person: Prospect) {
+        guard let index = people.firstIndex(where: { $0.id == person.id }) else { return }
+        people[index].isContacted.toggle()
+    }
 }
 
 struct ProspectList: View {
@@ -37,11 +42,20 @@ struct ProspectList: View {
     var body: some View {
         List {
             ForEach(prospects.people.filter { $0.isContacted == contacted }) { person in
-                HStack {
-                    Text(person.name)
-                    Spacer()
-                    Image(systemName: person.isContacted ? "checkmark.circle.fill" : "circle")
+                Button {
+                    withAnimation {
+                        prospects.toggleContacted(for: person)
+                    }
+                } label: {
+                    HStack {
+                        Text(person.name)
+                        Spacer()
+                        Image(systemName: person.isContacted ? "checkmark.circle.fill" : "circle")
+                    }
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(person.name), \(person.isContacted ? "связались" : "ещё не связались")")
+                .accessibilityHint("Изменить статус контакта")
             }
         }
     }
@@ -61,11 +75,11 @@ struct ContentView: View {
 }
 ```
 
-После рабочего shared state добавляйте QR и notifications по одному.
+Запусти slice, нажми на Анну во вкладке «Новые» и открой «Связались»: Анна исчезнет из первого фильтра и появится во втором. Это видимый эффект одной shared `Prospects`, которую читают оба tab. После этого добавляй QR и notifications по одному.
 
 ## Shared data между tabs
 
-Один observable container передаётся через environment всем экранам `TabView`. Каждый tab показывает фильтр одного Array, поэтому изменения сразу видны везде.
+В минимальном slice один observable container явно передаётся обоим экранам. Когда экранов станет больше, тот же объект удобно положить в environment для всего `TabView`. Каждый tab показывает фильтр одного Array, поэтому изменения сразу видны везде.
 
 ```swift
 TabView {

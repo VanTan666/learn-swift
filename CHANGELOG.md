@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.0.1 — 2026-09-17
+
+Точечная правка внутренней последовательности курса без изменения его архитектуры.
+
+### Beginner-first
+
+- Swift Testing в первой контрольной перенесён из обязательных требований в возврат после Day 17;
+- решение конвертера теперь действительно использует `enum` для единиц;
+- generic `Card<Content: View>` убран из основного примера Project 3 и отложен до Day 18;
+- checkpoint Day 7 переписан без optionals, `guard let` и `reduce`.
+
+### Воспроизводимые проекты
+
+- BetterRest получил учебный CSV, пошаговое создание `.mlmodel` и полный вызов `SleepCalculator` без placeholder;
+- Drawing получил полный рабочий `Spirograph` со sliders и анимацией;
+- iExpense показывает ошибки persistence вместо молчаливого `try?`;
+- Hot Prospects теперь наглядно изменяет общий observable state между вкладками;
+- migration старого SwiftData store в Milestone 10–12 стала необязательным advanced-заданием;
+- Day 0 теперь описывает маршрут Day 1–15 → проекты → bridge articles just-in-time.
+
 ## 1.0.0 — 2026-09-17
 
 Первая отдельная статическая версия курса для GitHub Pages.

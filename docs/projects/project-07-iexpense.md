@@ -25,16 +25,26 @@ struct ExpenseItem: Identifiable, Codable {
 @Observable
 final class Expenses {
     var items: [ExpenseItem] = [] { didSet { save() } }
+    var persistenceError: String?
 
     init() {
-        guard let data = UserDefaults.standard.data(forKey: "expenses"),
-              let saved = try? JSONDecoder().decode([ExpenseItem].self, from: data) else { return }
-        items = saved
+        guard let data = UserDefaults.standard.data(forKey: "expenses") else { return }
+
+        do {
+            items = try JSONDecoder().decode([ExpenseItem].self, from: data)
+        } catch {
+            persistenceError = "Не удалось прочитать сохранённые расходы: \(error.localizedDescription)"
+        }
     }
 
     private func save() {
-        guard let data = try? JSONEncoder().encode(items) else { return }
-        UserDefaults.standard.set(data, forKey: "expenses")
+        do {
+            let data = try JSONEncoder().encode(items)
+            UserDefaults.standard.set(data, forKey: "expenses")
+            persistenceError = nil
+        } catch {
+            persistenceError = "Не удалось сохранить расходы: \(error.localizedDescription)"
+        }
     }
 }
 
@@ -62,6 +72,17 @@ struct ContentView: View {
             .navigationTitle("iExpense")
             .toolbar { Button("Добавить", systemImage: "plus") { showingAdd = true } }
             .sheet(isPresented: $showingAdd) { AddExpenseView(expenses: expenses) }
+            .alert(
+                "Ошибка данных",
+                isPresented: Binding(
+                    get: { expenses.persistenceError != nil },
+                    set: { if !$0 { expenses.persistenceError = nil } }
+                )
+            ) {
+                Button("OK") { expenses.persistenceError = nil }
+            } message: {
+                Text(expenses.persistenceError ?? "Неизвестная ошибка")
+            }
         }
     }
 }
@@ -133,12 +154,16 @@ Sheet показывает временный экран поверх текущ
 ## Сохранение
 
 ```swift
-if let encoded = try? JSONEncoder().encode(items) {
+do {
+    let encoded = try JSONEncoder().encode(items)
     UserDefaults.standard.set(encoded, forKey: "Items")
+    persistenceError = nil
+} catch {
+    persistenceError = "Не удалось сохранить расходы: \(error.localizedDescription)"
 }
 ```
 
-`try?` из Day 14 превращает ошибку в Optional, но здесь он скрывает причину сбоя. В улучшенной версии загрузите данные в initializer модели через `do/catch`, сохраните понятный `persistenceError` и покажите его на экране. `UserDefaults` подходит для небольшого учебного массива; связанные и растущие данные лучше перенести в SwiftData.
+`do/catch` сохраняет понятный `persistenceError`, который рабочий slice показывает через alert. Так ошибка кодирования или повреждённые данные не исчезают молча. `UserDefaults` подходит для небольшого учебного массива; связанные и растущие данные лучше перенести в SwiftData.
 
 ## Удаление из List
 

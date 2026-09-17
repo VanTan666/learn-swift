@@ -17,7 +17,7 @@ milestoneSlug: milestone-10-12
 5. detail screen с информацией и друзьями;
 6. повторный запуск читает локальную базу.
 7. HTTP status проверяется, запрос можно отменить и повторить;
-8. повторный import идемпотентен, а migration проверена на копии старого store.
+8. повторный import идемпотентен и не создаёт дубликаты.
 
 <Challenge>
 <template #task>Построй import pipeline «download → decode → map → insert» и не смешивай его с layout-кодом.</template>
@@ -41,5 +41,9 @@ try context.save()
 
 </template>
 </Challenge>
+
+::: details Дополнительно: проверь migration
+Если приложение уже меняло schema между версиями, создай копию старого store и проверь открытие после migration. Для нового учебного проекта это необязательная production-практика: основной milestone считается завершённым без старой базы и migration plan.
+:::
 
 После проверки начинается Advanced Topics: [Instafilter →](/projects/project-13-instafilter).

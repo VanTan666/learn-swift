@@ -21,8 +21,7 @@ milestoneSlug: milestone-01-03
 5. понятное форматирование и `NavigationStack`.
 6. enum для единиц вместо произвольных строк;
 7. понятное состояние для пустого или некорректного ввода;
-8. проверка VoiceOver и максимального Dynamic Type;
-9. parameterized Swift Testing-тесты минимум трёх преобразований.
+8. проверка VoiceOver и максимального Dynamic Type.
 
 <Challenge>
 <template #task>Спроектируй и собери конвертер. Сначала нарисуй список состояний и формулу, затем открывай Xcode.</template>
@@ -32,27 +31,39 @@ milestoneSlug: milestone-01-03
 <template #solution>
 
 ```swift
-let units = ["Метры", "Километры", "Мили"]
+enum LengthUnit: String, CaseIterable, Identifiable {
+    case meters = "Метры"
+    case kilometers = "Километры"
+    case miles = "Мили"
 
-var meters: Double {
-    switch inputUnit {
-    case "Километры": input * 1000
-    case "Мили": input * 1609.344
-    default: input
+    var id: Self { self }
+
+    var metersPerUnit: Double {
+        switch self {
+        case .meters: 1
+        case .kilometers: 1_000
+        case .miles: 1_609.344
+        }
     }
 }
 
+let units = LengthUnit.allCases
+
+var meters: Double {
+    input * inputUnit.metersPerUnit
+}
+
 var result: Double {
-    switch outputUnit {
-    case "Километры": meters / 1000
-    case "Мили": meters / 1609.344
-    default: meters
-    }
+    meters / outputUnit.metersPerUnit
 }
 ```
 
 </template>
 </Challenge>
+
+::: details После Day 17: добавь тесты
+Следующим шагом маршрута будет Swift Testing. После него вернись к чистой функции преобразования и проверь несколько известных пар единиц через parameterized test. Для завершения этой контрольной тесты пока не обязательны.
+:::
 
 ::: tip Критерий готовности
 Проверь минимум три известных преобразования, ввод дробного числа и смену обеих единиц. После этого отметь milestone завершённым.

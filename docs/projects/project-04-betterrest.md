@@ -85,15 +85,42 @@ Optional здесь обрабатывается через `??`: разумны
 
 ## Create ML и Core ML
 
-Create ML обучает модель на таблице примеров, а Xcode превращает `.mlmodel` в типизированный Swift API. На экране остаётся обычный throwing initializer и function call.
+Create ML обучает модель на таблице примеров, а Xcode превращает `.mlmodel` в типизированный Swift API. Модель нужно создать и добавить в проект один раз.
+
+1. [Скачай учебный `SleepCalculator.csv`](/data/SleepCalculator.csv). Это небольшой синтетический набор для воспроизводимого упражнения, а не медицинская рекомендация.
+2. В Xcode выбери **Xcode → Open Developer Tool → Create ML**, затем создай **Tabular Regression**.
+3. Укажи CSV как Training Data, выбери `actualSleep` как Target, а `wake`, `estimatedSleep` и `coffee` оставь Features.
+4. Нажми **Train**, открой вкладку Output и сохрани модель под именем `SleepCalculator.mlmodel`.
+5. Перетащи файл в Project navigator приложения, включи **Copy items if needed** и target membership приложения.
+6. Собери проект один раз. Xcode сгенерирует тип `SleepCalculator`; его интерфейс можно увидеть, выбрав модель в Project navigator.
+
+Теперь добавь `import CoreML` и замени простой расчёт строкой, полученной из модели:
 
 ```swift
-let config = MLModelConfiguration()
-let model = try SleepCalculator(configuration: config)
-let prediction = try model.prediction(wake: wakeSeconds, estimatedSleep: sleepAmount, coffee: Double(coffeeAmount))
+private var modelBedtime: String {
+    do {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: wakeUp)
+        let hour = components.hour ?? 0
+        let minute = components.minute ?? 0
+        let wakeSeconds = Double(hour * 60 * 60 + minute * 60)
+
+        let config = MLModelConfiguration()
+        let model = try SleepCalculator(configuration: config)
+        let prediction = try model.prediction(
+            wake: wakeSeconds,
+            estimatedSleep: sleepAmount,
+            coffee: Double(coffeeAmount)
+        )
+
+        let bedtime = wakeUp.addingTimeInterval(-prediction.actualSleep)
+        return bedtime.formatted(date: .omitted, time: .shortened)
+    } catch {
+        return "Не удалось рассчитать время сна"
+    }
+}
 ```
 
-Ошибки показывай пользователю через alert, а не скрывай пустым `catch`.
+В `Section("Лечь спать")` покажи `Text(modelBedtime)`. Ошибка не исчезает в пустом `catch`: пользователь получает понятное состояние, а приложение остаётся рабочим.
 
 <Challenge>
 <template #task>Сделай результат обновляемым прямо в форме без отдельной кнопки и добавь понятное сообщение при ошибке модели.</template>
@@ -104,8 +131,20 @@ let prediction = try model.prediction(wake: wakeSeconds, estimatedSleep: sleepAm
 
 ```swift
 var bedtime: String {
-    do { /* prediction */ return predictedDate.formatted(date: .omitted, time: .shortened) }
-    catch { return "Не удалось рассчитать время сна" }
+    do {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: wakeUp)
+        let wakeSeconds = Double((components.hour ?? 0) * 3600 + (components.minute ?? 0) * 60)
+        let model = try SleepCalculator(configuration: MLModelConfiguration())
+        let prediction = try model.prediction(
+            wake: wakeSeconds,
+            estimatedSleep: sleepAmount,
+            coffee: Double(coffeeAmount)
+        )
+        return wakeUp.addingTimeInterval(-prediction.actualSleep)
+            .formatted(date: .omitted, time: .shortened)
+    } catch {
+        return "Не удалось рассчитать время сна"
+    }
 }
 ```
 

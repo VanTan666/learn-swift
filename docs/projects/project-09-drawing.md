@@ -93,6 +93,116 @@ SwiftUI умеет интерполировать properties, перечисле
 
 Алгоритм проходит Range с маленьким шагом, вычисляет точки через `sin`/`cos` и соединяет их. Циклы из Day 6 теперь непосредственно строят изображение.
 
+Ниже — полный рабочий вариант. Внешний и внутренний радиусы определяют период кривой, `distance` сдвигает рисующую точку, а `amount` позволяет показать только часть пути.
+
+```swift
+struct Spirograph: Shape {
+    var outerRadius: Double
+    var innerRadius: Double
+    var distance: Double
+    var amount: Double
+
+    var animatableData: AnimatablePair<
+        AnimatablePair<Double, Double>,
+        AnimatablePair<Double, Double>
+    > {
+        get {
+            AnimatablePair(
+                AnimatablePair(outerRadius, innerRadius),
+                AnimatablePair(distance, amount)
+            )
+        }
+        set {
+            outerRadius = newValue.first.first
+            innerRadius = newValue.first.second
+            distance = newValue.second.first
+            amount = newValue.second.second
+        }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let divisor = greatestCommonDivisor(Int(outerRadius), Int(innerRadius))
+        let difference = outerRadius - innerRadius
+        let period = 2 * Double.pi * innerRadius / Double(divisor)
+        let endPoint = period * amount
+
+        var path = Path()
+
+        for theta in stride(from: 0.0, through: endPoint, by: 0.01) {
+            let x = difference * cos(theta)
+                + distance * cos(difference / innerRadius * theta)
+            let y = difference * sin(theta)
+                - distance * sin(difference / innerRadius * theta)
+            let point = CGPoint(x: x + rect.midX, y: y + rect.midY)
+
+            if theta == 0 {
+                path.move(to: point)
+            } else {
+                path.addLine(to: point)
+            }
+        }
+
+        return path
+    }
+
+    private func greatestCommonDivisor(_ first: Int, _ second: Int) -> Int {
+        var a = first
+        var b = second
+
+        while b != 0 {
+            let remainder = a % b
+            a = b
+            b = remainder
+        }
+
+        return a
+    }
+}
+
+struct SpirographDemo: View {
+    @State private var outerRadius = 125.0
+    @State private var innerRadius = 75.0
+    @State private var distance = 100.0
+    @State private var amount = 1.0
+
+    var body: some View {
+        VStack {
+            Spirograph(
+                outerRadius: outerRadius,
+                innerRadius: innerRadius,
+                distance: distance,
+                amount: amount
+            )
+            .stroke(
+                AngularGradient(colors: [.orange, .pink, .indigo, .orange], center: .center),
+                lineWidth: 2
+            )
+            .frame(width: 300, height: 300)
+            .animation(.easeInOut, value: outerRadius)
+            .animation(.easeInOut, value: innerRadius)
+            .animation(.easeInOut, value: distance)
+            .animation(.easeInOut, value: amount)
+
+            LabeledContent("Внешний радиус") {
+                Slider(value: $outerRadius, in: 80...150)
+            }
+            LabeledContent("Внутренний радиус") {
+                Slider(value: $innerRadius, in: 20...75)
+            }
+            LabeledContent("Расстояние") {
+                Slider(value: $distance, in: 10...120)
+            }
+            LabeledContent("Часть рисунка") {
+                Slider(value: $amount, in: 0...1)
+            }
+        }
+        .padding()
+    }
+}
+```
+
+`animatableData` перечисляет четыре изменяемых числа, поэтому SwiftUI может интерполировать их между старым и новым состоянием. Ограничения sliders не дают внутреннему радиусу стать нулём.
+
 ## Canvas для большого числа элементов
 
 `Canvas` подходит, когда нужно нарисовать много примитивов без отдельного дерева View для каждого из них. Closure получает `GraphicsContext` и доступный размер.
@@ -115,17 +225,22 @@ Canvas { context, size in
 Canvas сам по себе не создаёт доступные элементы для каждой фигуры. Если графика передаёт данные, добавьте понятное описание или отдельное доступное представление.
 
 <Challenge>
-<template #task>Создай цветной spirograph со sliders для параметров и плавной animation при их изменении.</template>
+<template #task>Измени готовый spirograph: добавь slider толщины линии и вторую цветовую палитру, которую можно переключать кнопкой.</template>
 <template #knowledge>Loops, Double, trigonometry, Shape protocol, state и animation.</template>
-<template #hint1>Нормализуй делитель greatest common divisor, чтобы вычислить полный цикл.</template>
-<template #hint2>Передай одно или несколько чисел через `animatableData`.</template>
+<template #hint1>Толщина линии — обычный `@State Double`, который передаётся в `stroke`.</template>
+<template #hint2>Палитру можно вычислять из `@State Bool`, не создавая второй `Spirograph`.</template>
 <template #solution>
 
 ```swift
-var animatableData: AnimatablePair<Double, Double> {
-    get { AnimatablePair(innerRadius, distance) }
-    set { innerRadius = newValue.first; distance = newValue.second }
+@State private var lineWidth = 2.0
+@State private var usesCoolPalette = false
+
+var colors: [Color] {
+    usesCoolPalette ? [.cyan, .blue, .purple, .cyan] : [.orange, .pink, .indigo, .orange]
 }
+
+// В body:
+// .stroke(AngularGradient(colors: colors, center: .center), lineWidth: lineWidth)
 ```
 
 </template>

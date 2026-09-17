@@ -155,37 +155,45 @@ func square(_ number: Int) -> Int {
 <Checkpoint>
 <template #task>
 
-Напишите `summarize(_:)`, которая принимает массив оценок и возвращает tuple с минимумом, максимумом и средним значением. Для пустого массива верните `nil`.
+Напишите `summarize(first:rest:)`, которая принимает первую оценку отдельно, остальные — массивом, а возвращает tuple с минимумом, максимумом и средним значением. Такой интерфейс гарантирует, что хотя бы одна оценка всегда есть.
 
 </template>
 <template #knowledge>
 
 - parameters и return value;
-- optional result;
 - tuple с именованными полями;
-- ранний `return`.
+- переменные и цикл `for` из предыдущего дня.
 
 </template>
 <template #hint>
 
-Сначала проверьте `scores.isEmpty`. Значения `min()` и `max()` сами возвращают optional, но после этой проверки массив точно не пуст.
+Создайте `minimum`, `maximum` и `total` из первой оценки. Затем одним циклом обновляйте все три значения для остальных оценок.
 
 </template>
 <template #solution>
 
 ```swift
-func summarize(_ scores: [Double]) -> (min: Double, max: Double, average: Double)? {
-    guard let minimum = scores.min(), let maximum = scores.max() else {
-        return nil
+func summarize(first: Double, rest: [Double]) -> (min: Double, max: Double, average: Double) {
+    var minimum = first
+    var maximum = first
+    var total = first
+
+    for score in rest {
+        if score < minimum {
+            minimum = score
+        }
+        if score > maximum {
+            maximum = score
+        }
+        total += score
     }
 
-    let average = scores.reduce(0, +) / Double(scores.count)
+    let average = total / Double(rest.count + 1)
     return (minimum, maximum, average)
 }
 
-if let result = summarize([7.5, 9, 8.5]) {
-    print(result.average)
-}
+let result = summarize(first: 7.5, rest: [9, 8.5])
+print(result.average)
 ```
 
 </template>

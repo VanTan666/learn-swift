@@ -28,15 +28,17 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
-struct Card<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
+struct StatCard: View {
+    let title: String
+    let value: Int
 
     var body: some View {
-        content
+        VStack(alignment: .leading) {
+            Text(title)
+                .foregroundStyle(.secondary)
+            Text(value, format: .number)
+                .font(.largeTitle.bold())
+        }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
             .background(.thinMaterial)
@@ -49,12 +51,7 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Card {
-                Text("Нажатий")
-                    .foregroundStyle(.secondary)
-                Text(count, format: .number)
-                    .font(.largeTitle.bold())
-            }
+            StatCard(title: "Нажатий", value: count)
 
             Button("Увеличить") { count += 1 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -66,7 +63,7 @@ struct ContentView: View {
 #Preview { ContentView() }
 ```
 
-Здесь `Card` отвечает за composition, а `ButtonStyle` — за поведение и pressed state кнопки. Это две разные задачи, поэтому их не стоит смешивать в одном modifier.
+Здесь `StatCard` отвечает за composition, а `ButtonStyle` — за поведение и pressed state кнопки. Это две разные задачи, поэтому их не стоит смешивать в одном modifier.
 
 ## Почему View — struct
 
@@ -134,9 +131,9 @@ extension View {
 
 Здесь protocol и extension из Day 13 превращаются в SwiftUI API с естественным синтаксисом.
 
-## `@ViewBuilder`
-
-`@ViewBuilder` позволяет closure возвращать несколько View и использовать простые условия. Это удобно для собственных containers, но не применяй его там, где достаточно обычной composition.
+::: details Глубже: generic containers и `@ViewBuilder`
+Позже generic-параметр вида `Card<Content: View>` позволит карточке принимать произвольное содержимое, а `@ViewBuilder` — собирать несколько View из closure. До Day 18 этот синтаксис можно не разбирать: для текущей задачи конкретный `StatCard` проще, яснее и полностью достаточен.
+:::
 
 <Challenge>
 <template #task>Создай modifier для крупной синей кнопки с белым текстом, padding и capsule shape. Примени его к двум разным `Button`.</template>

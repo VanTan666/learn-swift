@@ -75,8 +75,38 @@ for (const anchor of ['content-view', 'state', 'arrays', 'foreach', 'computed-pr
   if (!wesplit.includes(`id="${anchor}"`)) fail(`WeSplit missing deep-link anchor: ${anchor}`)
 }
 
+const milestoneOne = source('projects/milestone-01-03.md')
+if (!milestoneOne.includes('enum LengthUnit')) fail('Milestone 1 solution must use enum units')
+if (milestoneOne.includes('let units = ["Метры"')) fail('Milestone 1 regressed to string units')
+if (milestoneOne.slice(0, milestoneOne.indexOf('<Challenge>')).includes('Swift Testing')) fail('Milestone 1 requires Swift Testing before Day 17')
+
+const projectThree = source('projects/project-03-views-and-modifiers.md')
+if (projectThree.includes('struct Card<Content: View>')) fail('Project 3 introduces generic Card before Day 18')
+
+const daySevenCheckpoint = source('swift/day-007-functions-part1.md').split('<Checkpoint>')[1] ?? ''
+if (daySevenCheckpoint.includes('guard let') || daySevenCheckpoint.includes('.reduce(')) fail('Day 7 checkpoint uses future syntax')
+
+const betterRest = source('projects/project-04-betterrest.md')
+if (!betterRest.includes('/data/SleepCalculator.csv') || !betterRest.includes('prediction.actualSleep')) fail('BetterRest Core ML path is incomplete')
+if (betterRest.includes('/* prediction */')) fail('BetterRest contains a prediction placeholder')
+if (!readable(resolve(docs, 'public/data/SleepCalculator.csv'))) fail('BetterRest training CSV is missing')
+
+if (!source('projects/project-09-drawing.md').includes('struct Spirograph: Shape')) fail('Drawing is missing a complete Spirograph')
+if (source('swift/day-000-how-to-become-ios-developer.md').includes('Day 1–19')) fail('Day 0 describes the old linear route')
+
+const milestoneTenCore = source('projects/milestone-10-12.md').split('<Challenge>')[0]
+if (/migration/i.test(milestoneTenCore)) fail('Milestone 10–12 requires migration in its core requirements')
+
+const iExpenseSlice = source('projects/project-07-iexpense.md').split('## Рабочий vertical slice')[1]?.split('\n## ')[0] ?? ''
+if (iExpenseSlice.includes('try?')) fail('iExpense vertical slice silently ignores persistence errors')
+if (!source('projects/project-16-hot-prospects.md').includes('toggleContacted')) fail('Hot Prospects slice does not demonstrate shared mutation')
+
 function readable(path) {
   try { readFileSync(path); return true } catch { return false }
+}
+
+function source(relativePath) {
+  return readFileSync(resolve(docs, relativePath), 'utf8')
 }
 
 function validatePage(slug, metadataKey) {
