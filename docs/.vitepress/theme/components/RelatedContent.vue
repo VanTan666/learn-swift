@@ -24,7 +24,7 @@ const next = computed(() => {
 <template>
   <section v-if="lessonId || itemSlug" class="related-content">
     <h2>Связанные материалы</h2>
-    <div v-if="relatedTheory.length"><h3>Повторить теорию</h3><ul><li v-for="id in relatedTheory" :key="id"><a v-if="lessonsById.get(id)" :href="withBase(`${lessonPath(lessonsById.get(id)!)}?returnTo=${encodeURIComponent(route.path.replace(/^\/learn-swift/, ''))}`)">{{ lessonsById.get(id)?.title }} →</a></li></ul></div>
+    <div v-if="relatedTheory.length"><h3>Повторить теорию</h3><ul><li v-for="id in relatedTheory" :key="id"><a v-if="lessonsById.get(id)" :href="withBase(`${lessonPath(lessonsById.get(id)!)}?returnTo=${encodeURIComponent(route.path)}`)">{{ lessonsById.get(id)?.title }} →</a></li></ul></div>
     <div v-if="relatedProjects.length"><h3>Используется в проектах</h3><ul><li v-for="item in relatedProjects" :key="item.slug"><a :href="withBase(projectPath(item.slug))">Project {{ item.project }} — {{ item.title }} →</a></li></ul></div>
     <div v-if="next"><h3>Дальше</h3><a class="next-course-card" :href="withBase(projectPath(next.slug))">{{ 'project' in next ? `Project ${next.project} — ${next.title}` : next.title }} →</a></div>
   </section>

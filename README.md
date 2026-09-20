@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://vantan666.github.io/learn-swift/"><strong>Открыть курс →</strong></a>
+  <a href="https://learn-swift.vantan.tech/"><strong>Открыть курс →</strong></a>
 </p>
 
 <p align="center">
@@ -74,7 +74,7 @@ scripts/                   # проверки контента и маршрут
 
 ## Данные и хостинг
 
-Это полностью статический сайт. Здесь нет базы данных, аккаунтов, комментариев, OAuth и собственного сервера. GitHub Pages раздаёт готовые HTML, CSS и JavaScript, а отметки о прохождении остаются в `localStorage` текущего браузера.
+Это полностью статический сайт. Здесь нет базы данных, аккаунтов, комментариев, OAuth и собственного сервера. GitHub Pages раздаёт готовые HTML, CSS и JavaScript на `learn-swift.vantan.tech`, а отметки о прохождении остаются в `localStorage` текущего браузера.
 
 ## Происхождение материала
 

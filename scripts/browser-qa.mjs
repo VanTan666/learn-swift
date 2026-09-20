@@ -6,7 +6,7 @@ import { URL } from 'node:url'
 import courseMap from '../docs/.vitepress/data/course-map.json' with { type: 'json' }
 
 const origin = process.env.SWIFT_RU_QA_ORIGIN ?? 'http://127.0.0.1:4173'
-const base = (process.env.SWIFT_RU_QA_BASE ?? '/learn-swift').replace(/\/$/, '')
+const base = (process.env.SWIFT_RU_QA_BASE ?? '').replace(/\/$/, '')
 const siteUrl = (path) => `${origin}${path.startsWith(base + '/') ? path : `${base}${path === '/' ? '/' : path}`}`
 const chromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const profile = mkdtempSync(join(tmpdir(), 'swift-ru-qa-'))

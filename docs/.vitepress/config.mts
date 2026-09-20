@@ -24,16 +24,16 @@ const orderedPages = [
 ]
 
 export default defineConfig({
-  base: '/learn-swift/',
+  base: '/',
   lang: 'ru-RU',
   title: 'Swift → SwiftUI',
   description: 'Русский beginner-first курс Swift и 19 практических проектов SwiftUI',
   cleanUrls: true,
   appearance: false,
   lastUpdated: false,
-  sitemap: { hostname: 'https://vantan666.github.io/learn-swift/' },
+  sitemap: { hostname: 'https://learn-swift.vantan.tech/' },
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/learn-swift/swift-mark.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/swift-mark.svg' }],
     ['script', {}, `(() => {
       let theme = 'system';
       try { theme = localStorage.getItem('swift-ru-theme-v1') || 'system'; } catch {}

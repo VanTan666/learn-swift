@@ -250,5 +250,5 @@ for task in tasks {
 
 <div class="course-bridge-cta">
   <strong>Теперь применим знания в настоящем SwiftUI-приложении.</strong>
-  <a href="/learn-swift/projects/project-01-wesplit">Начать Project 1 — WeSplit →</a>
+  <a href="/projects/project-01-wesplit">Начать Project 1 — WeSplit →</a>
 </div>
