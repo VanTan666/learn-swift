@@ -33,6 +33,9 @@ jobs:
       - name: Verify content
         run: npm run validate-content
 
+      - name: Replay Swift project steps
+        run: python3 scripts/check-project-swift.py
+
       - name: Verify course resume logic
         run: npm run test:resume
 

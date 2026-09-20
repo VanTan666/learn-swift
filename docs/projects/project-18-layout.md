@@ -10,7 +10,179 @@ SwiftUI layout работает как разговор: родитель пре
 
 <ProjectPrerequisites slug="project-18-layout" />
 
-## Рабочий vertical slice
+## Стартовая точка
+
+Создай новый **iOS → App** с именем **LayoutLab** и интерфейсом SwiftUI. В сгенерированном `ContentView.swift` оставь минимальное состояние ниже. Сохрани файл `LayoutLabApp.swift`, созданный Xcode; если шаг меняет точку входа, замени существующий файл, не создавай второй `@main`.
+
+```swift
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        Text("Начало")
+    }
+}
+```
+
+Сначала прочитай задание шага и попробуй выполнить его. Решение закрыто: открой его для сверки или если застрял. Применяй изменения по порядку — каждый шаг опирается на предыдущий.
+
+### Шаг 1. Границы View и frame
+
+**Цель:** Границы View и frame.
+
+**Попробуй сам:** Добавь красный фон к Text, затем frame 200 × 100, затем синий фон.
+
+<details>
+<summary>Показать решение шага 1</summary>
+
+В **ContentView.swift** найди этот блок:
+
+```swift
+Text("Начало")
+```
+
+Замени его следующим блоком; остальной код файла сохрани:
+
+```swift
+Text("Hello")
+            .background(.red)
+            .frame(width: 200, height: 100)
+            .background(.blue)
+```
+
+
+</details>
+
+**Ожидаемый результат:** Красный фон ограничен текстом, синий — внешним прямоугольником. Выполни Build, затем Run и проверь это поведение перед продолжением.
+
+**Новые концепции:** Родитель предлагает размер, дочерний View отвечает своим размером. frame создаёт контейнер, а не растягивает нарисованные буквы. Порядок modifiers делает границы видимыми.
+
+Красная область отвечает размеру текста, синяя — результату frame. Надпись не обязана растягивать буквы до 200 точек: она выбирает свой размер внутри предложения. Это базовый способ отладки layout — временно обозначать фоном границы разных уровней композиции.
+
+### Шаг 2. Выравнивание
+
+**Цель:** Выравнивание.
+
+**Попробуй сам:** Помести два текста в VStack(alignment: .leading). Второму задай alignmentGuide со сдвигом относительно leading.
+
+<details>
+<summary>Показать решение шага 2</summary>
+
+В **ContentView.swift** найди этот блок:
+
+```swift
+Text("Hello")
+            .background(.red)
+            .frame(width: 200, height: 100)
+            .background(.blue)
+```
+
+Замени его следующим блоком; остальной код файла сохрани:
+
+```swift
+VStack(alignment: .leading, spacing: 20) {
+            Text("Swift").background(.orange)
+            Text("SwiftUI")
+                .background(.cyan)
+                .alignmentGuide(.leading) { dimensions in dimensions[.leading] - 20 }
+        }
+        .padding()
+```
+
+
+</details>
+
+**Ожидаемый результат:** Вторая надпись смещена относительно общей линии выравнивания. Выполни Build, затем Run и проверь это поведение перед продолжением.
+
+**Новые концепции:** Guide возвращает координату внутри дочернего элемента, которую родитель совмещает с линией выравнивания. Это отличается от offset, который меняет только отображение после layout.
+
+Guide сообщает точку, которую родитель должен совместить с leading других детей. Возвращая значение на 20 меньше обычного, мы сдвигаем видимое содержимое относительно общей линии. Сравни с `.offset(x: 20)`: похожая картинка не означает одинаковое участие в размещении.
+
+### Шаг 3. Локальный GeometryReader
+
+**Цель:** Локальный GeometryReader.
+
+**Попробуй сам:** Добавь под надписями область высотой 80. Нарисуй в ней прямоугольник половины доступной ширины и выведи измеренную ширину.
+
+<details>
+<summary>Показать решение шага 3</summary>
+
+В **ContentView.swift** найди этот блок:
+
+```swift
+        }
+        .padding()
+```
+
+Замени его следующим блоком; остальной код файла сохрани:
+
+```swift
+            GeometryReader { proxy in
+                VStack(alignment: .leading) {
+                    Rectangle().fill(.indigo).frame(width: proxy.size.width / 2, height: 30)
+                    Text("Ширина: \(proxy.size.width.formatted())")
+                }
+            }
+            .frame(height: 80)
+        }
+        .padding()
+```
+
+
+</details>
+
+**Ожидаемый результат:** Изменение ширины окна меняет прямоугольник и число; высота области остаётся 80. Выполни Build, затем Run и проверь это поведение перед продолжением.
+
+**Новые концепции:** GeometryReader охотно занимает предложенное пространство, поэтому ограничиваем его локально. Размер берём из proxy, не из глобальных границ экрана.
+
+У GeometryReader размер относится к его собственной области, а не ко всему устройству. `.frame(height: 80)` ограничивает жадное расширение по вертикали. Для проверки меняй ширину окна: половина proxy.size.width должна оставаться половиной именно этой области.
+
+### Шаг 4. Равные колонки стандартными средствами
+
+**Цель:** Равные колонки стандартными средствами.
+
+**Попробуй сам:** Добавь HStack из Swift, SwiftUI, Xcode. Каждому Text дай maxWidth infinity.
+
+<details>
+<summary>Показать решение шага 4</summary>
+
+В **ContentView.swift** найди этот блок:
+
+```swift
+            GeometryReader { proxy in
+```
+
+Замени его следующим блоком; остальной код файла сохрани:
+
+```swift
+            HStack(spacing: 0) {
+                ForEach(["Swift", "SwiftUI", "Xcode"], id: \.self) { item in
+                    Text(item).frame(maxWidth: .infinity).padding(.vertical)
+                        .background(.indigo.opacity(0.15))
+                }
+            }
+            GeometryReader { proxy in
+```
+
+
+</details>
+
+**Ожидаемый результат:** Три подписи занимают равные доли строки. Выполни Build, затем Run и проверь это поведение перед продолжением.
+
+**Новые концепции:** Для простой задачи достаточно стандартного HStack. Следующий эксперимент с Layout будет воспроизводить понятный результат, а не вводить абстракцию без образца.
+
+Каждый Text сообщает готовность занять доступную ширину через maxWidth infinity. HStack распределяет место между такими детьми. spacing 0 убирает промежутки, поэтому равные доли легче увидеть. Это контрольный результат для сравнения с собственным Layout.
+
+### Шаг 5. Собственный Layout
+
+**Цель:** Собственный Layout.
+
+**Попробуй сам:** Создай EqualWidthHStack с sizeThatFits и placeSubviews. Замени только HStack своей структурой. Обрабатывай пустой набор.
+
+<details>
+<summary>Показать решение шага 5</summary>
+
+**EqualWidthHStack.swift** — создай файл и включи его в target приложения.
 
 ```swift
 import SwiftUI
@@ -47,56 +219,43 @@ struct EqualWidthHStack: Layout {
         }
     }
 }
-
-struct ContentView: View {
-    var body: some View {
-        EqualWidthHStack {
-            ForEach(["Swift", "SwiftUI", "Xcode"], id: \.self) { item in
-                Text(item)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical)
-                    .background(.indigo.opacity(0.15))
-            }
-        }
-        .padding()
-    }
-}
-
-#Preview { ContentView() }
 ```
 
-Этот Layout полностью измеряет и размещает subviews, включая пустой набор. Измените ширину Preview и проверьте, что три элемента остаются равными.
-
-## Предложение, ответ, размещение
-
-Modifier `frame(width:height:)` не меняет внутренний View напрямую — он создаёт новый container, который предлагает размер ребёнку и сообщает свой размер родителю.
+В **ContentView.swift** найди этот блок:
 
 ```swift
-Text("Hello")
-    .background(.red)
-    .frame(width: 200, height: 100)
-    .background(.blue)
+HStack(spacing: 0)
 ```
 
-Два background наглядно показывают границы текста и внешнего frame.
-
-## Alignment guides
-
-Alignment guide позволяет View сообщить нестандартную точку выравнивания. Closure получает `ViewDimensions` и возвращает координату.
+Замени его следующим блоком; остальной код файла сохрани:
 
 ```swift
-.alignmentGuide(.leading) { dimensions in
-    dimensions[.leading] - 20
-}
+EqualWidthHStack
 ```
 
-## GeometryReader
 
-GeometryReader предоставляет размер и координаты container, но сам охотно занимает всё предложенное пространство. Используй его локально, когда layout действительно зависит от geometry, а не как универсальный spacer.
+</details>
 
-## Custom Layout
+**Ожидаемый результат:** Колонки остались равными; изменение окна и крупный текст не обрезают высоту подписей. Выполни Build, затем Run и проверь это поведение перед продолжением.
 
-Protocol `Layout` требует measurement и placement. Это снова знакомый pattern: struct соответствует protocol и реализует functions.
+**Новые концепции:** Два метода — один неделимый контракт Layout: первый измеряет дочерние элементы с шириной колонки, второй размещает их с тем же предложением. Fallback нужен, когда родитель не указал ширину; guard защищает деление на ноль.
+
+`sizeThatFits` сначала делит предлагаемую ширину на число детей, затем спрашивает нужную высоту каждого при этой ширине и берёт максимум. `placeSubviews` повторяет ту же ширину колонки и смещает x на index × width. Если измерение и размещение используют разные предложения, текст может обрезаться — поэтому обе части проверяются вместе.
+
+## Глубже — необязательно
+
+::: details Глубже: адаптивная компоновка и движение
+Для выбора готовой компоновки сначала попробуй ViewThatFits или AnyLayout. Scroll effects и чтение geometry для анимаций — отдельное упражнение с учётом Reduce Motion.
+:::
+
+## Самостоятельное изменение
+
+<Challenge>
+<template #task>Собери RadialLayout для нескольких кнопок. Сначала вычисли центр и радиус, затем равномерные углы.</template>
+<template #knowledge>Используй состояние и функции, которые уже собрал в этом проекте.</template>
+<template #hint1>Измерение возвращает размер области; размещение использует угол 2π × index / count.</template>
+<template #hint2>Проверь обычный случай и граничные значения; сохрани основной рабочий маршрут.</template>
+<template #solution>
 
 ```swift
 struct RadialLayout: Layout {
@@ -133,30 +292,100 @@ struct RadialLayout: Layout {
 }
 ```
 
-::: details Глубже: готовые адаптивные инструменты
-Для простого выбора из нескольких компоновок сначала попробуйте `ViewThatFits` или `AnyLayout`. `containerRelativeFrame` привязывает размер к контейнеру, а `onGeometryChange` считывает только нужное значение без широкого `GeometryReader`. Они не нужны для понимания первого custom `Layout`.
-:::
-
-## Scroll effects
-
-Geometry каждого элемента может управлять hue, scale или rotation во время scroll. Эффект должен помогать ориентации, а не мешать чтению; учитывай Reduce Motion.
-
-<Challenge>
-<template #task>Создай radial layout для набора buttons и адаптируй его к доступному размеру. Добавь альтернативу без движения.</template>
-<template #knowledge>Functions, closures, structs, protocols, geometry и trigonometry.</template>
-<template #hint1>Угол шага равен `2 * .pi / Double(subviews.count)`.</template>
-<template #hint2>Радиус возьми как половину меньшей стороны за вычетом размера элемента.</template>
-<template #solution>
-
-```swift
-let angle = Angle.radians(Double(index) / Double(subviews.count) * 2 * .pi)
-let point = CGPoint(x: center.x + cos(angle.radians) * radius,
-                    y: center.y + sin(angle.radians) * radius)
-subview.place(at: point, anchor: .center, proposal: .unspecified)
-```
-
 </template>
 </Challenge>
+
+## Reference: полный код проекта
+
+Основной маршрут, без самостоятельного challenge. Используй этот блок для сверки уже собранного приложения.
+
+<details>
+<summary>Открыть все итоговые файлы проекта</summary>
+
+### ContentView.swift
+
+```swift
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Swift").background(.orange)
+            Text("SwiftUI")
+                .background(.cyan)
+                .alignmentGuide(.leading) { dimensions in dimensions[.leading] - 20 }
+            EqualWidthHStack {
+                ForEach(["Swift", "SwiftUI", "Xcode"], id: \.self) { item in
+                    Text(item).frame(maxWidth: .infinity).padding(.vertical)
+                        .background(.indigo.opacity(0.15))
+                }
+            }
+            GeometryReader { proxy in
+                VStack(alignment: .leading) {
+                    Rectangle().fill(.indigo).frame(width: proxy.size.width / 2, height: 30)
+                    Text("Ширина: \(proxy.size.width.formatted())")
+                }
+            }
+            .frame(height: 80)
+        }
+        .padding()
+    }
+}
+```
+
+### LayoutLabApp.swift
+
+```swift
+import SwiftUI
+
+@main
+struct LayoutLabApp: App {
+    var body: some Scene {
+        WindowGroup { ContentView() }
+    }
+}
+```
+
+### EqualWidthHStack.swift
+
+```swift
+import SwiftUI
+
+struct EqualWidthHStack: Layout {
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) -> CGSize {
+        guard !subviews.isEmpty else { return .zero }
+        let width = proposal.width ?? 300
+        let itemWidth = width / CGFloat(subviews.count)
+        let height = subviews.map {
+            $0.sizeThatFits(.init(width: itemWidth, height: proposal.height)).height
+        }.max() ?? 0
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) {
+        guard !subviews.isEmpty else { return }
+        let width = bounds.width / CGFloat(subviews.count)
+        for (index, subview) in subviews.enumerated() {
+            subview.place(
+                at: CGPoint(x: bounds.minX + CGFloat(index) * width, y: bounds.minY),
+                anchor: .topLeading,
+                proposal: .init(width: width, height: bounds.height)
+            )
+        }
+    }
+}
+```
+
+</details>
 
 <ProjectRecap slug="project-18-layout" />
 

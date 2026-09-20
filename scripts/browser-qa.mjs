@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawn } from 'node:child_process'
+import { URL } from 'node:url'
 import courseMap from '../docs/.vitepress/data/course-map.json' with { type: 'json' }
 
 const origin = process.env.SWIFT_RU_QA_ORIGIN ?? 'http://127.0.0.1:4173'
@@ -75,7 +76,9 @@ try {
   await waitFor(`location.pathname === '${base}/projects/project-01-wesplit' && location.hash === '#computed-properties'`)
 
   await navigate('/projects/project-01-wesplit')
-  assert(await evaluate(`document.body.innerText.includes('От Swift к SwiftUI') && document.querySelectorAll('.familiar-new').length >= 3`), 'WeSplit integration blocks не найдены')
+  assert(await evaluate(`document.body.innerText.includes('Шаг 1. Первый View') && document.querySelectorAll('.familiar-new').length >= 3`), 'WeSplit integration blocks не найдены')
+  assert(await evaluate(`document.body.innerText.includes('Шаг 2. Состояние и поле суммы') && document.body.innerText.includes('Попробуй сам')`), 'WeSplit step-by-step content не найден')
+  assert(await evaluate(`document.querySelectorAll('details').length >= 5 && [...document.querySelectorAll('summary')].some(summary => summary.innerText.includes('итоговые файлы'))`), 'WeSplit hidden solutions/reference не найдены')
   await evaluate(`document.querySelector('.page-progress button').click(); true`)
   await waitFor(`JSON.parse(localStorage.getItem('swift-ru-course-progress-v2')).projects['project-01-wesplit'] === true`)
   await navigate('/projects/project-01-wesplit')
@@ -97,13 +100,22 @@ try {
   await evaluate(`const input=document.querySelector('.VPLocalSearchBox input, .DocSearch-Input'); input.value='computed property'; input.dispatchEvent(new Event('input',{bubbles:true})); true`)
   await waitFor(`document.body.innerText.includes('День 10') && document.body.innerText.includes('WeSplit')`)
 
+  for (const project of courseMap.projects) {
+    await navigate(`/projects/${project.slug}`)
+    const steps = await evaluate(`[...document.querySelectorAll('summary')].filter(e => e.textContent.startsWith('Показать решение шага')) .map(e => ({ text: e.textContent, open: e.parentElement.open }))`)
+    assert(steps.length >= 2 && steps.every(step => !step.open), `${project.slug}: решения должны быть закрыты`)
+    await evaluate(`[...document.querySelectorAll('summary')].find(e => e.textContent === 'Показать решение шага 1').click(); true`)
+    assert(await evaluate(`[...document.querySelectorAll('summary')].find(e => e.textContent === 'Показать решение шага 1').parentElement.open`), `${project.slug}: решение не открывается`)
+    assert(await evaluate(`[...document.querySelectorAll('summary')].find(e => e.textContent === 'Показать решение шага 2').parentElement.open === false`), `${project.slug}: следующий шаг раскрыт заранее`)
+  }
+
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
   await navigate('/projects/project-01-wesplit')
   assert(await evaluate(`getComputedStyle(document.querySelector('.VPNavBarHamburger')).display !== 'none'`), 'mobile menu button не видна')
   await evaluate(`document.querySelector('.VPNavBarHamburger').click(); true`)
   await waitFor(`document.querySelector('.VPNavScreen') && getComputedStyle(document.querySelector('.VPNavScreen')).display !== 'none'`)
 
-  console.log(`✅ Browser QA: ${routes.length} routes, dashboard, Day 15 bridge, legacy migration, project progress, theme, search, return link, mobile drawer.`)
+  console.log(`✅ Browser QA: ${routes.length} routes, 19 projects with independent collapsed steps, dashboard, Day 15 bridge, legacy migration, project progress, theme, search, return link, mobile drawer.`)
 } finally {
   socket?.close()
   chrome.kill('SIGTERM')
@@ -124,9 +136,9 @@ async function evaluate(expression) {
 }
 
 async function navigate(path) {
-  await send('Page.navigate', { url: siteUrl(path) })
-  await waitFor(`document.readyState === 'complete'`)
-  await evaluate(`new Promise(resolve => setTimeout(resolve, 250))`)
+  const target = new URL(siteUrl(path))
+  await send('Page.navigate', { url: target.href })
+  await waitFor(`location.pathname === ${JSON.stringify(target.pathname)} && document.readyState === 'complete' && Boolean(document.querySelector('#app')?.__vue_app__)`, 10000)
 }
 
 async function waitFor(expression, timeout = 5000) {

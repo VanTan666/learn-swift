@@ -34,6 +34,13 @@ for (const project of map.projects) {
   for (const lesson of project.prerequisites) if (!lessonIds.has(lesson)) fail(`${project.slug} references unknown lesson: ${lesson}`)
   for (const concept of project.concepts) if (!conceptIds.has(concept)) fail(`${project.slug} references unknown concept: ${concept}`)
   validatePage(project.slug, 'projectSlug')
+  const projectSource = source(`projects/${project.slug}.md`)
+  if (!projectSource.includes('## Стартовая точка') && !projectSource.includes('## Стартовая точка и пошаговая сборка')) fail(`${project.slug} missing step-by-step starting point`)
+  if (!projectSource.includes('Попробуй сам')) fail(`${project.slug} missing independent attempt marker`)
+  if (!projectSource.includes('Ожидаемый результат')) fail(`${project.slug} missing expected-result marker`)
+  if (!projectSource.includes('Новые концепции')) fail(`${project.slug} missing new-concepts marker`)
+  if (projectSource.includes('## Рабочий vertical slice')) fail(`${project.slug} still uses legacy vertical-slice heading`)
+  validateProjectSteps(project.slug, projectSource)
 }
 
 for (const milestone of map.milestones) {
@@ -72,7 +79,8 @@ for (const file of [
 
 for (const anchor of ['content-view', 'state', 'arrays', 'foreach', 'computed-properties', 'formatting']) {
   const wesplit = readFileSync(resolve(docs, 'projects/project-01-wesplit.md'), 'utf8')
-  if (!wesplit.includes(`id="${anchor}"`)) fail(`WeSplit missing deep-link anchor: ${anchor}`)
+  const count = wesplit.match(new RegExp(`id="${anchor}"`, 'g'))?.length ?? 0
+  if (count !== 1) fail(`WeSplit anchor ${anchor} must occur exactly once, found ${count}`)
 }
 
 const milestoneOne = source('projects/milestone-01-03.md')
@@ -103,6 +111,45 @@ if (!source('projects/project-16-hot-prospects.md').includes('toggleContacted'))
 
 function readable(path) {
   try { readFileSync(path); return true } catch { return false }
+}
+
+function validateProjectSteps(slug, content) {
+  // Ignore fenced examples: headings inside Swift comments are not article structure.
+  const structure = content.replace(/```[^\n]*\n[\s\S]*?```/g, '[code]')
+  const steps = [...structure.matchAll(/^### Шаг (\d+)\.[^\n]*$/gm)]
+  if (steps.length < 2) fail(`${slug}: нужны самостоятельные шаги сборки`)
+  const reference = structure.indexOf('## Reference: полный код')
+  if (reference < 0) fail(`${slug}: отсутствует итоговый Reference`)
+  const challenge = structure.indexOf('<Challenge>')
+  if (challenge < 0 || reference < challenge) fail(`${slug}: Reference должен идти после challenge`)
+  for (const [index, match] of steps.entries()) {
+    if (Number(match[1]) !== index + 1) fail(`${slug}: нарушена нумерация шагов`)
+    const end = steps[index + 1]?.index ?? Math.min(...[
+      structure.indexOf('\n## ', match.index + 1),
+      structure.indexOf('<Checkpoint>', match.index + 1),
+      structure.indexOf('<Challenge>', match.index + 1)
+    ].filter((position) => position >= 0))
+    const step = structure.slice(match.index, end < 0 ? reference : end)
+    const attempt = step.indexOf('**Попробуй сам:**')
+    const solution = step.indexOf('<details>')
+    const close = step.indexOf('</details>')
+    const result = step.indexOf('**Ожидаемый результат:**')
+    const explanation = step.indexOf('**Новые концепции:**')
+    if (!(attempt >= 0 && attempt < solution && solution < close && close < result && result < explanation)) {
+      fail(`${slug}, шаг ${index + 1}: порядок попытка → скрытое решение → результат → объяснение`)
+    }
+    if (!step.includes(`Показать решение шага ${index + 1}`)) fail(`${slug}: нет подписанного решения шага ${index + 1}`)
+    const outsideSolution = step.slice(0, solution) + step.slice(close + '</details>'.length)
+    if (outsideSolution.includes('[code]')) fail(`${slug}, шаг ${index + 1}: код решения раскрыт вне details`)
+    const answer = step.slice(solution, close)
+    if (!answer.includes('[code]') && !/Create ML|\.mlmodel/.test(answer)) fail(`${slug}: пустое решение шага ${index + 1}`)
+    if (answer.includes('[code]') && !/\.swift|Внутри|В \*\*|Создай ресурс/.test(answer)) fail(`${slug}: не указано место изменения кода в шаге ${index + 1}`)
+  }
+  if (structure.includes('<details open')) fail(`${slug}: решения должны быть закрыты по умолчанию`)
+  const ref = structure.slice(reference)
+  if (!ref.includes('<details>') || !ref.includes('App.swift') || !ref.includes('ContentView.swift')) {
+    fail(`${slug}: Reference должен включать экран и точку входа приложения`)
+  }
 }
 
 function source(relativePath) {

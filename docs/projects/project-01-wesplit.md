@@ -6,90 +6,46 @@ projectSlug: project-01-wesplit
 
 # Project 1 — WeSplit
 
-Ты переходишь от основ языка к настоящему интерфейсу. WeSplit получает сумму счёта, число гостей и процент чаевых, а затем показывает, сколько должен заплатить каждый.
+Ты переходишь от основ языка к настоящему интерфейсу. WeSplit получает сумму счёта, число гостей и процент чаевых, а затем показывает общую сумму и сумму с каждого.
 
 <ProjectPrerequisites slug="project-01-wesplit" />
 
-## Рабочий vertical slice
+## Стартовая точка
 
-Замените `ContentView.swift` этим кодом и запустите приложение. Сначала получите работающий расчёт, затем разбирайте части ниже.
+Создай проект **iOS → App** с интерфейсом SwiftUI и открой `ContentView.swift`. На каждом шаге сначала попробуй выполнить задание самостоятельно, затем раскрой решение и проверь ожидаемый результат.
+
+### Шаг 1. Первый View
+
+<span id="content-view"></span>
+
+**Цель:** получить минимальный компилируемый экран приложения.
+
+**Попробуй сам:** оставь в `ContentView.swift` только `import SwiftUI`, `ContentView`, `body` и текст `WeSplit`.
+
+<details>
+<summary>Показать решение шага 1</summary>
+
+Замени **ContentView.swift** целиком:
 
 ```swift
 import SwiftUI
 
 struct ContentView: View {
-    @State private var checkAmount = 0.0
-    @State private var numberOfPeople = 2
-    @State private var tipPercentage = 20
-
-    private let tips = [0, 10, 15, 20, 25]
-
-    private var totalPerPerson: Double {
-        let total = checkAmount * (1 + Double(tipPercentage) / 100)
-        return total / Double(numberOfPeople)
-    }
-
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Счёт") {
-                    TextField("Сумма", value: $checkAmount, format: .number)
-                        .keyboardType(.decimalPad)
-
-                    Picker("Людей", selection: $numberOfPeople) {
-                        ForEach(2..<11) { Text("\($0)").tag($0) }
-                    }
-                }
-
-                Section("Чаевые") {
-                    Picker("Процент", selection: $tipPercentage) {
-                        ForEach(tips, id: \.self) { Text("\($0)%") }
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                Section("С каждого") {
-                    Text(totalPerPerson, format: .currency(code: "RUB"))
-                }
-            }
-            .navigationTitle("WeSplit")
-        }
+        Text("WeSplit")
     }
 }
 
 #Preview { ContentView() }
 ```
 
-Ожидаемый результат: при сумме `1000`, двух людях и чаевых `20%` получится `600 ₽` с человека.
+</details>
 
-## От Swift к SwiftUI
+**Ожидаемый результат:** приложение запускается и показывает надпись `WeSplit`.
 
-**Swift** — язык программирования. **SwiftUI** — framework для создания интерфейсов с помощью Swift. Переменные, Arrays, closures, structs, protocols и optionals никуда не исчезают: теперь они управляют экраном приложения.
+**Новые концепции:** `View`, `body`, `some View`.
 
-```text
-Swift: variables → arrays → closures → structs → protocols → optionals
-                                      ↓
-SwiftUI: View → @State → Form → Picker → NavigationStack
-                                      ↓
-                                   WeSplit
-```
-
-Открой Xcode и создай проект **iOS → App**. Выбери Interface: **SwiftUI** и Language: **Swift**. Работать будем в `ContentView.swift`.
-
-<span id="content-view"></span>
-## Первый View: знакомый Swift плюс одна новая идея
-
-```swift
-import SwiftUI
-
-struct ContentView: View {
-    var body: some View {
-        Text("Hello, world!")
-    }
-}
-```
-
-`ContentView` — обычный Swift `struct`. Запись `: View` означает соответствие protocol `View`. `body` — computed property. Новое здесь — `some View`: свойство возвращает один конкретный тип интерфейса, но SwiftUI скрывает его длинное точное имя.
+`ContentView` — обычный Swift `struct`. Запись `: View` означает соответствие протоколу `View`, а `body` — уже знакомое computed property. Новая часть — `some View`: SwiftUI скрывает точный составной тип возвращаемого интерфейса.
 
 <FamiliarNew
   :familiar="['structs', 'protocols', 'computed-properties']"
@@ -97,156 +53,203 @@ struct ContentView: View {
   return-to="/projects/project-01-wesplit#content-view"
 />
 
-::: tip Педагогический мост
-Не нужно заново учить `struct` или properties. Повтори их по ссылкам, если детали забылись, а здесь сосредоточься на `View`.
-:::
+### Шаг 2. Состояние и поле суммы
 
 <span id="state"></span>
-## Состояние интерфейса: `@State`
+
+**Цель:** связать ввод пользователя с состоянием SwiftUI.
+
+**Попробуй сам:** добавь `@State` для суммы и `TextField`, который изменяет это значение через binding.
+
+<details>
+<summary>Показать решение шага 2</summary>
+
+В **ContentView.swift**, внутри `ContentView`, добавь `checkAmount` перед `body`, затем замени `body` следующим. Импорт и `#Preview` сохрани:
 
 ```swift
 @State private var checkAmount = 0.0
-@State private var numberOfPeople = 2
-@State private var tipPercentage = 20
+
+var body: some View {
+    Form {
+        TextField("Сумма", value: $checkAmount, format: .number)
+            .keyboardType(.decimalPad)
+    }
+}
 ```
 
-`var`, `private` и type inference уже знакомы. `@State` — новая SwiftUI-часть: она хранит значение, от которого зависит интерфейс. Когда значение меняется, SwiftUI заново вычисляет нужную часть `body`.
+</details>
+
+**Ожидаемый результат:** в форме появляется поле суммы, в него можно вводить число, а приложение продолжает компилироваться.
+
+**Новые концепции:** `@State`, Binding, `Form` и `TextField`.
+
+`@State` хранит значение, от которого зависит интерфейс. Когда значение меняется, SwiftUI заново вычисляет нужную часть `body`. Обычная stored property здесь не подходит: `View` — структура-значение, а `@State` предоставляет управляемое SwiftUI-хранилище.
+
+`checkAmount` — само значение, а `$checkAmount` — двусторонняя привязка. Поэтому `TextField(value:)` может и прочитать число, и записать новый ввод обратно в `@State`.
 
 <FamiliarNew
   :familiar="['variables', 'double']"
-  :fresh="['state']"
+  :fresh="['state', 'binding']"
   return-to="/projects/project-01-wesplit#state"
 />
 
-Не пытайся менять обычную stored property внутри `View`: структуры считаются значениями. `@State` предоставляет SwiftUI отдельное управляемое хранилище.
-
-<span id="arrays"></span>
-## Данные для Picker — обычный Array
-
-```swift
-let tipPercentages = [10, 15, 20, 25, 0]
-```
-
-Здесь нет новой магии: это Swift Array из Day 3. SwiftUI просто читает элементы и превращает их в варианты интерфейса.
-
-## Form, Section и NavigationStack
-
-```swift
-NavigationStack {
-    Form {
-        Section("Сумма счёта") {
-            TextField("Amount", value: $checkAmount, format: .currency(code: currencyCode))
-                .keyboardType(.decimalPad)
-        }
-    }
-    .navigationTitle("WeSplit")
-}
-```
-
-`NavigationStack` создаёт навигационный контекст и место для заголовка. `Form` раскладывает controls в системную форму, а `Section` объединяет связанные поля. `$checkAmount` создаёт **Binding (привязку)**: `TextField` может не только прочитать число, но и записать новое значение обратно в `@State`.
-
 ::: warning Частая ошибка
-`checkAmount` — само значение. `$checkAmount` — двусторонняя привязка к нему. `TextField(value:)` нужен именно Binding.
+Не путай `checkAmount` с `$checkAmount`: первое передаёт значение, второе передаёт Binding. Поле ввода, которое должно менять состояние, получает именно `$checkAmount`.
 :::
 
+### Шаг 3. Выбор гостей и чаевых
+
+<span id="arrays"></span>
 <span id="foreach"></span>
-## Range и closure внутри `ForEach`
+
+**Цель:** добавить два управляемых выбора без копирования строк вручную.
+
+**Попробуй сам:** добавь состояние для количества гостей и процента чаевых, затем создай два `Picker` с `ForEach`.
+
+<details>
+<summary>Показать решение шага 3</summary>
+
+В **ContentView.swift** добавь три свойства перед `body`. Оба `Picker` вставь внутри существующего `Form`, сразу после `TextField` с его modifiers:
 
 ```swift
-Picker("Количество людей", selection: $numberOfPeople) {
-    ForEach(2..<100) {
-        Text("\($0) people")
-    }
+@State private var numberOfPeople = 2
+@State private var tipPercentage = 20
+private let tips = [0, 10, 15, 20, 25]
+
+Picker("Людей", selection: $numberOfPeople) {
+    ForEach(2..<11) { Text("\($0)").tag($0) }
 }
+
+Picker("Процент", selection: $tipPercentage) {
+    ForEach(tips, id: \.self) { Text("\($0)%") }
+}
+.pickerStyle(.segmented)
 ```
 
-Разложим строку:
+</details>
 
-- `2..<100` — Swift Range из Day 6: числа от 2 до 99;
-- `{ ... }` — trailing closure из Day 9;
-- `$0` — shorthand parameter closure;
-- `ForEach` — SwiftUI View, который строит дочерний View для каждого элемента.
+**Ожидаемый результат:** количество гостей и процент чаевых меняются прямо в форме.
+
+**Новые концепции:** `ForEach` и `Picker`. Массивы, диапазоны и trailing closure уже знакомы из Swift-уроков.
+
+Массив `tips` — обычный Swift `Array`; SwiftUI превращает его элементы в варианты интерфейса. `2..<11` — знакомый `Range`, `{ ... }` — trailing closure, а `ForEach` использует их для построения повторяющихся `View`. `$0` обозначает текущий элемент closure.
 
 <FamiliarNew
-  :familiar="['ranges', 'closures']"
-  :fresh="['foreach', 'picker', 'binding']"
+  :familiar="['arrays', 'ranges', 'closures']"
+  :fresh="['foreach', 'picker']"
   return-to="/projects/project-01-wesplit#foreach"
 />
 
-Получается важная формула: знакомые Range и closure + новый `ForEach` = повторяющийся интерфейс.
+### Шаг 4. Расчёт и навигация
 
 <span id="computed-properties"></span>
-## Расчёт суммы через computed property
 
-Сначала попробуй самостоятельно создать `totalPerPerson`: вычисли чаевые, прибавь их к счёту и раздели результат на количество людей.
+**Цель:** вывести сумму на человека и оформить экран как законченную форму.
 
-<details>
-<summary>Показать подсказку</summary>
-
-Помни, что `numberOfPeople` уже содержит реальное число людей, если Picker работает с диапазоном `2..<100`. Переведи целые числа в `Double` перед делением.
-
-</details>
+**Попробуй сам:** добавь computed property `totalPerPerson`, секцию результата, `NavigationStack` и заголовок. Проверь сумму `1000`, двух гостей и `20%` чаевых.
 
 <details>
-<summary>Показать код</summary>
+<summary>Показать решение шага 4</summary>
+
+В **ContentView.swift** добавь `totalPerPerson` перед `body` и замени `body` целиком. Здесь меняется вложенность формы, поэтому ниже показана вся разметка с уже знакомыми полями:
 
 ```swift
-var totalPerPerson: Double {
-    let peopleCount = Double(numberOfPeople)
-    let tipSelection = Double(tipPercentage)
-    let tipValue = checkAmount / 100 * tipSelection
-    let grandTotal = checkAmount + tipValue
+private var totalPerPerson: Double {
+    let total = checkAmount * (1 + Double(tipPercentage) / 100)
+    return total / Double(numberOfPeople)
+}
 
-    return grandTotal / peopleCount
+var body: some View {
+    NavigationStack {
+        Form {
+            TextField("Сумма", value: $checkAmount, format: .number)
+                .keyboardType(.decimalPad)
+            Picker("Людей", selection: $numberOfPeople) {
+                ForEach(2..<11) { Text("\($0)").tag($0) }
+            }
+            Picker("Процент", selection: $tipPercentage) {
+                ForEach(tips, id: \.self) { Text("\($0)%") }
+            }
+            .pickerStyle(.segmented)
+            Section("С каждого") {
+                Text(totalPerPerson, format: .number)
+            }
+        }
+        .navigationTitle("WeSplit")
+    }
 }
 ```
 
 </details>
 
-Это тот же computed property, что в Day 10: он ничего не хранит, а каждый раз получает результат из текущего состояния. UI выводит его напрямую:
+**Ожидаемый результат:** при сумме `1000`, двух людях и чаевых `20%` расчёт даёт `600` с человека. Формат валюты добавим на следующем шаге.
+
+**Новые концепции:** `NavigationStack` и `Section`. Computed property знакомо из Swift, а Form появился на шаге 2.
+
+`totalPerPerson` ничего не хранит: computed property получает результат из текущего состояния при каждом обращении. `NavigationStack` создаёт контекст навигации, `Form` раскладывает controls по системной форме, а `Section` объединяет связанные поля.
 
 📚 [Повторить computed properties →](/swift/day-010-structs-part1?returnTo=%2Fprojects%2Fproject-01-wesplit%23computed-properties)
+
+### Шаг 5. Валюта и клавиатура
+
+<span id="formatting"></span>
+
+**Цель:** сделать отображение валюты зависимым от локали и дать пользователю способ закрыть клавиатуру.
+
+**Попробуй сам:** добавь `currencyCode` с запасным значением `USD`, передай его в формат суммы с каждого и свяжи поле с `@FocusState`. Пока поле в фокусе, покажи кнопку `Готово` в toolbar.
+
+<details>
+<summary>Показать решение шага 5</summary>
+
+В **ContentView.swift**, внутри `ContentView`, добавь свойства перед `body`:
+
+```swift
+private let currencyCode = Locale.current.currency?.identifier ?? "USD"
+@FocusState private var amountIsFocused: Bool
+```
+
+Внутри `Form` замени существующий `TextField` со всеми его modifiers:
+
+```swift
+TextField("Сумма", value: $checkAmount, format: .currency(code: currencyCode))
+    .keyboardType(.decimalPad)
+    .focused($amountIsFocused)
+```
+
+В секции «С каждого» замени строку `Text(totalPerPerson, format: .number)`:
 
 ```swift
 Text(totalPerPerson, format: .currency(code: currencyCode))
 ```
 
-<span id="formatting"></span>
-## Формат валюты и Optional
+Сразу после `.navigationTitle("WeSplit")` добавь:
 
 ```swift
-let currencyCode = Locale.current.currency?.identifier ?? "USD"
-```
-
-`currency` может отсутствовать, поэтому optional chaining `?.` безопасно запрашивает `identifier`, а `??` подставляет запасной код. Это прямое применение Day 14 в реальном приложении.
-
-## Скрываем клавиатуру с `@FocusState`
-
-```swift
-@FocusState private var amountIsFocused: Bool
-```
-
-Свяжи focus с полем и добавь кнопку в toolbar:
-
-```swift
-TextField("Amount", value: $checkAmount, format: .currency(code: currencyCode))
-    .focused($amountIsFocused)
-
 .toolbar {
     if amountIsFocused {
-        Button("Done") {
-            amountIsFocused = false
-        }
+        Button("Готово") { amountIsFocused = false }
     }
 }
 ```
 
-`@FocusState` похож на `@State`, но описывает, какой control сейчас принимает ввод.
+</details>
+
+**Ожидаемый результат:** суммы форматируются в валюте текущей локали, а кнопка `Готово` скрывает клавиатуру.
+
+**Новые концепции:** `Locale`, `@FocusState` и toolbar. Optional chaining повторяет материал Swift-урока об optionals.
+
+`Locale.current.currency?.identifier` может не вернуть валюту, поэтому optional chaining `?.` безопасно проходит к `identifier`, а `?? "USD"` задаёт запасной код. `@FocusState` похож на `@State`, но описывает, какой control сейчас принимает ввод.
+
+<Checkpoint>
+
+Собери приложение до этого состояния самостоятельно. Проверь сценарий `1000` → `2` гостя → `20%` чаевых, затем измени локаль или код валюты и проверь форматирование.
+
+</Checkpoint>
 
 <Challenge>
 <template #task>
 
-Добавь проверку нулевых чаевых. Если выбран `0%`, выдели итоговую сумму заметным цветом. Затем добавь отдельную строку с общей суммой до разделения.
+Добавь проверку нулевых чаевых: если выбран `0%`, выдели сумму с каждого заметным цветом. Затем добавь отдельную строку с общей суммой до разделения.
 
 </template>
 <template #knowledge>
@@ -269,22 +272,94 @@ TextField("Amount", value: $checkAmount, format: .currency(code: currencyCode))
 <template #solution>
 
 ```swift
-var totalAmount: Double {
-    let tipValue = checkAmount / 100 * Double(tipPercentage)
-    return checkAmount + tipValue
+private var totalAmount: Double {
+    checkAmount * (1 + Double(tipPercentage) / 100)
 }
 
-Text(totalPerPerson, format: .currency(code: currencyCode))
-    .foregroundStyle(tipPercentage == 0 ? .red : .primary)
+Section("Итого") {
+    Text("Всего")
+    Text(totalAmount, format: .currency(code: currencyCode))
+    Text("С каждого")
+    Text(totalPerPerson, format: .currency(code: currencyCode))
+        .foregroundStyle(tipPercentage == 0 ? .red : .primary)
+}
 ```
 
 </template>
 </Challenge>
 
+## Reference: полный код проекта
+
+Основной маршрут до самостоятельного challenge. Все файлы нового проекта; сгенерированный Xcode `WeSplitApp.swift` замени, не добавляй вторую точку входа.
+
+<details>
+<summary>Открыть все итоговые файлы</summary>
+
+### ContentView.swift
+
+```swift
+import SwiftUI
+
+struct ContentView: View {
+    @State private var checkAmount = 0.0
+    @State private var numberOfPeople = 2
+    @State private var tipPercentage = 20
+    private let tips = [0, 10, 15, 20, 25]
+    private let currencyCode = Locale.current.currency?.identifier ?? "USD"
+    @FocusState private var amountIsFocused: Bool
+    private var totalPerPerson: Double {
+        let total = checkAmount * (1 + Double(tipPercentage) / 100)
+        return total / Double(numberOfPeople)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("Сумма", value: $checkAmount, format: .currency(code: currencyCode))
+                    .keyboardType(.decimalPad)
+                    .focused($amountIsFocused)
+                Picker("Людей", selection: $numberOfPeople) {
+                    ForEach(2..<11) { Text("\($0)").tag($0) }
+                }
+                Picker("Процент", selection: $tipPercentage) {
+                    ForEach(tips, id: \.self) { Text("\($0)%") }
+                }
+                .pickerStyle(.segmented)
+                Section("С каждого") {
+                    Text(totalPerPerson, format: .currency(code: currencyCode))
+                }
+            }
+            .navigationTitle("WeSplit")
+            .toolbar {
+                if amountIsFocused {
+                    Button("Готово") { amountIsFocused = false }
+                }
+            }
+        }
+    }
+}
+
+#Preview { ContentView() }
+```
+
+### WeSplitApp.swift
+
+```swift
+import SwiftUI
+@main
+struct WeSplitApp: App {
+    var body: some Scene {
+        WindowGroup { ContentView() }
+    }
+}
+```
+
+</details>
+
 <ProjectRecap slug="project-01-wesplit" />
 
 ::: tip Что получилось
-Ты использовал обычный Swift для управления настоящим интерфейсом: Array наполнил Picker, Range и closure построили строки `ForEach`, computed property выполнил расчёт, protocol `View` описал экран, а Optional помог выбрать валюту.
+Ты использовал знакомые Swift-концепции для управления настоящим интерфейсом: `@State` связал ввод с экраном, `Array` и `Range` наполнили `Picker`, `ForEach` построил повторяющиеся элементы, а computed properties рассчитали итог. `Locale` и `@FocusState` сделали форму удобнее для реального пользователя.
 :::
 
 ## Следующий проект

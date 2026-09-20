@@ -16,6 +16,11 @@
 .vp-doc p, .vp-doc li { line-height: 1.75; }
 .vp-doc a[target="_blank"]::after { content: " ↗"; font-size: .78em; }
 .vp-doc div[class*="language-"] { border: 1px solid var(--vp-c-divider); }
+.vp-doc > div > details { margin: 20px 0; padding: 0 18px; border: 1px solid var(--vp-c-divider); border-radius: 12px; background: var(--vp-c-bg-soft); }
+.vp-doc > div > details > summary { padding: 15px 0; cursor: pointer; font-weight: 600; line-height: 1.5; }
+.vp-doc > div > details > summary:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 4px; border-radius: 4px; }
+.vp-doc > div > details[open] { padding-bottom: 12px; }
+.vp-doc > div > details div[class*="language-"] { margin-left: 0; margin-right: 0; border-radius: 8px; }
 
 .breadcrumb { display: flex; flex-wrap: wrap; gap: .45rem; color: var(--vp-c-text-2); font-size: .82rem; margin-bottom: 1.2rem; }
 .breadcrumb strong { color: var(--vp-c-text-1); font-weight: 600; }
@@ -117,4 +122,8 @@ kbd { padding: 1px 5px; border: 1px solid var(--vp-c-divider); border-radius: 5p
   .checkpoint { border-radius: 14px; }
   .concept-columns, .project-grid, .course-dashboard, .concept-map { grid-template-columns: 1fr; }
   .continue-card { position: static; }
+}
+
+@media (max-width: 480px) {
+  .VPNavBarTitle .title { font-size: 13px; }
 }
