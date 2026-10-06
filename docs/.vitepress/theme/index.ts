@@ -16,7 +16,22 @@ import './custom.css'
 export default {
   extends: DefaultTheme,
   Layout,
-  enhanceApp({ app }) {
+  enhanceApp({ app, router }) {
+    if (typeof window !== 'undefined') {
+      const metricaWindow = window as Window & {
+        ym?: (counterId: number, method: string, url: string, options: { referer: string; title: string }) => void
+      }
+      let previousUrl = window.location.href
+      router.onAfterRouteChange = (to) => {
+        const nextUrl = new URL(to, window.location.origin).href
+        if (nextUrl === previousUrl) return
+        metricaWindow.ym?.(113463034, 'hit', nextUrl, {
+          referer: previousUrl,
+          title: document.title
+        })
+        previousUrl = nextUrl
+      }
+    }
     app.component('Checkpoint', Checkpoint)
     app.component('Challenge', Challenge)
     app.component('CourseDashboard', CourseDashboard)

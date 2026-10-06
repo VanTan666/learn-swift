@@ -33,6 +33,7 @@ export default defineConfig({
   lastUpdated: false,
   sitemap: { hostname: 'https://learn-swift.vantan.tech/' },
   head: [
+    ['script', {}, "(function(m,e,t,r,i,k,a){\n  m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};\n  m[i].l=1*new Date();\n  for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}\n  k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)\n})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=113463034','ym');\nym(113463034,'init',{ssr:true,clickmap:true,referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});"],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/swift-mark.svg' }],
     ['script', {}, `(() => {
       let theme = 'system';
